@@ -1,12 +1,17 @@
-var ExpenseReportModel = require('../model/expensereport');
-var handlers = require('../Utils/handlers');
-var mongoose = require('mongoose');
+const expensereportschema = require('../model/expensereport');
+const handlers = require('../Utils/handlers');
+const mongoose = require('mongoose');
 
 class UpdateIncome {
+    constructor(request, response) {
+        this.request = request.body;
+        this.response = response;
+        this.ExpenseReportModel = mongoose.model(this.request.societyname + "expensereport", expensereportschema);
+    }
 
     buildSubscriptionModel(expensereport, request) {
         var subcriptionObj = {
-            'subscriberName': request.name,
+            'subscribername': request.name,
             'amount': request.amount
         };
         if (expensereport.incomedetails.subscriptiondetails) {
@@ -27,59 +32,85 @@ class UpdateIncome {
         }
     }
     /* Add if it is new expense list */
-    addNewIncome(month, request, res) {
+    addNewReport(month, request, res) {
         try {
-            var query = ExpenseReportModel.findOne({ month: month });
-            var obj = this;
-            query.then(function (expensereport) {
+            var query = this.ExpenseReportModel.findOne({ month: month });
+            query.then(expensereport => {
                 if (expensereport) {
                     expensereport.totalincome = parseInt(expensereport.totalincome) + parseInt(request.amount);
+                    // build new subdocuments based on subscription type
                     if (request.type === 'SUBSCRIPTION') {
                         expensereport.subscriptionpaid = expensereport.subscriptionpaid + 1;
-                        obj.buildSubscriptionModel(expensereport, request);
+                        this.buildSubscriptionModel(expensereport, request);
                     }
                     else {
-                        obj.buildOtherIncomeModel(expensereport, request);
+                        this.buildOtherIncomeModel(expensereport, request);
                     }
-                    expensereport.save().then(doc => { handlers.HandleResponse(doc, res) })
-                        .catch(err => { handlers.HandleError(err, res) });
+                    return expensereport.save()
                 }
-            }).catch(err => {handlers.HandleError(err, res) });
+            }).then(doc => { handlers.HandleResponse(doc, res) })
+                .catch(err => { handlers.HandleError(err, res) });
         } catch (e) {
             handlers.HandleInternalError(e, res);
         }
     }
 
-    updateReport(req, res) {
+    updateReport() {
         try {
-            var date = req.body.date;
+            var request = this.request;
+            var date = request.date;
             if (!date) {
                 date = new Date();
             }
-            var obj = this;
             var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
-            var expensereport = new ExpenseReportModel({ month: month });
-            var request = req.body;
+            var expensereport = new this.ExpenseReportModel({ month: month });
             var query, update;
+            // If type is subscription update subscriptiondetails sub documents, else update otherincomedetails
             if (request.type === 'SUBSCRIPTION') {
-                query = { 'incomedetails.subscriptiondetails.subscriberName': request.name, 'month': month };
-                update = { '$inc': { 'incomedetails.subscriptiondetails.$.amount': request.amount, 'totalincome': request.amount } };
+                query = { 'incomedetails.subscriptiondetails.subscribername': request.name, 'month': month };
+                update = {
+                    '$inc': { 'incomedetails.subscriptiondetails.$.amount': request.amount, 'totalincome': request.amount },
+                    '$set': { 'incomedetails.subscriptiondetails.$.lastupdated': new Date() }
+                };
             } else {
                 query = { 'incomedetails.otherincomedetails.name': request.name, 'month': month };
-                update = { '$inc': { 'incomedetails.otherincomedetails.$.amount': request.amount, 'totalincome': request.amount } };
+                update = {
+                    '$inc': { 'incomedetails.otherincomedetails.$.amount': request.amount, 'totalincome': request.amount },
+                    '$set': { 'incomedetails.otherincomedetails.$.lastupdated': new Date() }
+                }
             }
-            ExpenseReportModel.updateOne(query, update).then(expensereport => {
-                if (expensereport.nModified == 0) {
-                    obj.addNewIncome(month, request, res);
+            this.ExpenseReportModel.findOneAndUpdate(query, update, { new: true }
+            ).then(expensereport => {
+                if (!expensereport) {
+                    this.addNewReport(month, request, this.response);
                 }
                 else {
-                    handlers.HandleResponse(expensereport, res);
+                    handlers.HandleResponse(expensereport, this.response);
                 }
-            }).catch(err => { handlers.HandleError(err, res) });
+            }).catch(err => { handlers.HandleError(err, this.response) });
         } catch (e) {
-            handlers.HandleInternalError(e, res);
+            handlers.HandleInternalError(e, this.response);
         }
     }
 }
 
-module.exports = new UpdateIncome();
+module.exports = UpdateIncome;
+
+/*
+http://localhost:3001/expensereport/addincome
+
+SUBCRIPTION-Add/update
+{
+	"name": "test",
+	"amount": "2150",
+	"type":"SUBSCRIPTION",
+	"societyname":"Greenpark"
+}
+
+Other income -Add/update
+{
+	"name": "discount",
+	"amount": "2150",
+	"societyname":"Greenpark"
+}
+*/

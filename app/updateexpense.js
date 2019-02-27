@@ -1,48 +1,68 @@
-var ExpenseReportModel = require('../model/expensereport');
-var handlers = require('../Utils/handlers');
+const expensereportschema = require('../model/expensereport');
+const handlers = require('../Utils/handlers');
+const mongoose = require('mongoose');
 
-class UpdateExpenseReport {
+class UpdateExpenseReport{
+    constructor(request, response) {
+        this.request = request.body;
+        this.response = response;
+        this.ExpenseReportModel = mongoose.model(this.request.societyname+ "expensereport", expensereportschema);
+    }
     /* Add if it is new expense list */
-    AddNewExpense(month, request, res) {
+    addNewReport(month) {
         try {
-            var query = ExpenseReportModel.findOne({ month: month });
+            var query = this.ExpenseReportModel.findOne({ month: month });
+            var request = this.request;
             query.then(function (expensereport) {
                 if (expensereport) {
-                    expensereport.totalexpense = parseInt(expensereport.totalincome) + parseInt(request.Amount);
+                    expensereport.totalexpense = parseInt(expensereport.totalexpense) + parseInt(request.amount);
                     expensereport.expensedetails.push(request);
-                    expensereport.save().then(doc => { handlers.HandleResponse(doc, res) })
-                        .catch(err => { handlers.HandleError(err, res) });
+                   return expensereport.save();
                 }
-            }).catch(err => { HandleError(err, res) });
+            }).then(doc => {
+                handlers.HandleResponse(doc, this.response);
+            }).catch(err => { HandleError(err, this.response) });
         } catch (e) {
-            handlers.HandleInternalError(e, res);
+            handlers.HandleInternalError(e, this.response);
         }
     }
     /* Query and update the expense amount */
-    updateReport(req, res) {
+    updateReport() {
         try {
-            var obj = this;
-            var date = req.date;
+            var date = this.request.date;
             if (!date) {
                 date = new Date();
             }
-            var request = req.body;
+            let request = this.request;
             var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
-            ExpenseReportModel.updateOne(
-                { 'expensedetails.Name': request.Name, 'month': month },
-                { '$inc': { 'expensedetails.$.Amount': request.Amount, 'totalexpense': request.Amount } },
+            this.ExpenseReportModel.findOneAndUpdate(
+                { 'expensedetails.name': request.name, 'month': month },
+                { '$inc': { 'expensedetails.$.amount': request.amount, 'totalexpense': request.amount },
+                  '$set': {'expensedetails.$.lastupdated': new Date()} },
+                {new: true}
             ).then(expensereport => {
-                if (expensereport.nModified == 0) {
-                    obj.AddNewExpense(month, request, res);
+                if (!expensereport) {
+                    this.addNewReport(month);
                 }
                 else {
-                    handlers.HandleResponse(expensereport, res);
+                    return expensereport;
                 }
-            }).catch(err => { handlers.HandleError(err, res) });
+            }).then(doc => {
+                handlers.HandleResponse(doc, this.response);
+            }).catch(err => { handlers.HandleError(err, this.response) });
         } catch (e) {
-            handlers.HandleInternalError(e, res);
+            handlers.HandleInternalError(e, this.response);
         }
     }
 }
 
-module.exports = new UpdateExpenseReport();
+module.exports = UpdateExpenseReport;
+/*
+http://localhost:3001/expensereport/addexpense
+{
+	"societyname":"Greenpark",
+	"name":"Security",
+	"amount":"8"
+}
+
+*/

@@ -4,10 +4,9 @@ class Handlers {
         Handle the response for success
     */
     HandleResponse(doc, res) {
-        if (!doc || doc.length === 0) {
-            return res.status(500).send(doc)
+        if (doc) {
+          return res.status(201).send(doc);
         }
-        return res.status(201).send(doc);
     }
     /*
         Handle the response for catch event
@@ -22,6 +21,10 @@ class Handlers {
     HandleInternalError(error, res) {
         console.log("Error Message ", error)
         return res.status(500).json(error);
+    }
+    /* Handle respons e asynchronously */
+    HandleRspAsync(res) {
+        return new Promise((resolve, reject) => { resolve(res);});
     }
 }
 module.exports = new Handlers();

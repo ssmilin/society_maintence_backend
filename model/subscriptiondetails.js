@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 
 const Subscriptiondetails = new mongoose.Schema({
-    subscriberName: {type:String, default:''},
+    subscribername: {type:String, default:''},
     amount: {type:Number, default:0},
     remarks:{type:String, default:''},
     created:{ type: Date, default: Date.now },
