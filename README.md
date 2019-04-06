@@ -63,4 +63,4 @@ https://society-app-backend.herokuapp.com/expensereport/updatemember
 }
 ```
 ### Get Report for given month
-https://society-app-backend.herokuapp.com/expensereport/getmonthlyreport
+https://society-app-backend.herokuapp.com/expensereport/getmonthlyreport?societyname=Greenpark&month=April2019
