@@ -8,12 +8,13 @@ const updatememeber = require('../app/updatemembers');
 /* Add New Report. */
 router.post('/addnewreport', function (req, res, next) {
     console.log("Given name ", req.body);
-    addnewexpenseobj = new addnewexpense(req, res);
+    addnewexpenseobj = new addnewexpense(req.body, res);
     addnewexpenseobj.addNewReport();
 });
 /* Add New Report. */
 router.get('/getmonthlyreport', function (req, res, next) {
-    addnewexpenseobj = new addnewexpense(req, res);
+    console.log("Enter ", req.query);
+    addnewexpenseobj = new addnewexpense(req.query, res);
     addnewexpenseobj.getMonthlyReport();
 });
 

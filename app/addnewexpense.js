@@ -4,8 +4,9 @@ const mongoose = require('mongoose');
 
 class AddNewExpense {
     constructor(request, response) {
-        this.request = request.body;
+        this.request = request;
         this.response = response;
+        console.log("Addd New Expense ", this.request.societyname);
         this.ExpenseReportModel = mongoose.model(this.request.societyname+ "expensereport", expensereportschema);
     }
     /*
@@ -41,11 +42,11 @@ class AddNewExpense {
     */
    getMonthlyReport() {
     try {
-        var date = this.request.date;
-        if (!date) {
-           date = new Date();
+        var month = this.request.month;
+        if (!month) {
+           var date = new Date();
+           month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
         }
-        var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
         var expensereport = new this.ExpenseReportModel({ month: month });
         var query = this.ExpenseReportModel.findOne({ month: month });
         query.then(function (existingReport) {
