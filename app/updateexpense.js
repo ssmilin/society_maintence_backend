@@ -13,16 +13,21 @@ class UpdateExpenseReport{
         try {
             var query = this.ExpenseReportModel.findOne({ month: month });
             var request = this.request;
+            console.log("ADD  nEW 1 ", month);
             query.then(function (expensereport) {
+                console.log("ADD  nEW 2");
                 if (expensereport) {
+                    console.log("ADD  nEW 3");
                     expensereport.totalexpense = parseInt(expensereport.totalexpense) + parseInt(request.amount);
                     expensereport.expensedetails.push(request);
+                    console.log("ADD  nEW 4");
                    return expensereport.save();
                 }
             }).then(doc => {
                 handlers.HandleResponse(doc, this.response);
             }).catch(err => { HandleError(err, this.response) });
         } catch (e) {
+            console.log("Error ",e);
             handlers.HandleInternalError(e, this.response);
         }
     }
@@ -41,7 +46,9 @@ class UpdateExpenseReport{
                   '$set': {'expensedetails.$.lastupdated': new Date()} },
                 {new: true}
             ).then(expensereport => {
+                console.log("Expense report++");
                 if (!expensereport) {
+                    console.log("ADD  nEW ");
                     this.addNewReport(month);
                 }
                 else {
@@ -58,7 +65,7 @@ class UpdateExpenseReport{
 
 module.exports = UpdateExpenseReport;
 /*
-http://localhost:3001/expensereport/addexpense
+http://localhost:3000/expensereport/addexpense
 {
 	"societyname":"Greenpark",
 	"name":"Security",

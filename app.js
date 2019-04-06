@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/', indexRouter);
 app.use('/expensereport', expenseReportRouter);
 
-
-mongoose.connect('mongodb://localhost:27017/7miracle', {useNewUrlParser: true});
+const uri = "mongodb+srv://7miracle:7miracle@cluster0-5b5py.mongodb.net/7miracle?retryWrites=true";
+mongoose.connect(uri, {useNewUrlParser: true});
 
 module.exports = app;
