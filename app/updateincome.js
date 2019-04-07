@@ -58,11 +58,12 @@ class UpdateIncome {
     updateReport() {
         try {
             var request = this.request;
-            var date = request.date;
-            if (!date) {
-                date = new Date();
+            var month = this.request.month;
+            if (!month) {
+               var date = new Date();
+               month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
             }
-            var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
+          //  var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
             var expensereport = new this.ExpenseReportModel({ month: month });
             var query, update;
             // If type is subscription update subscriptiondetails sub documents, else update otherincomedetails

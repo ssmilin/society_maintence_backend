@@ -34,12 +34,13 @@ class UpdateExpenseReport{
     /* Query and update the expense amount */
     updateReport() {
         try {
-            var date = this.request.date;
-            if (!date) {
-                date = new Date();
+            var month = this.request.month;
+            if (!month) {
+               var date = new Date();
+               month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
             }
             let request = this.request;
-            var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
+            //var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
             this.ExpenseReportModel.findOneAndUpdate(
                 { 'expensedetails.name': request.name, 'month': month },
                 { '$inc': { 'expensedetails.$.amount': request.amount, 'totalexpense': request.amount },

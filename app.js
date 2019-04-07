@@ -4,7 +4,7 @@ var logger = require('morgan');
 const mongoose = require('mongoose');
 var indexRouter = require('./routes/index');
 var expenseReportRouter = require('./routes/expensereport');
-
+var cors = require('cors');
 var app = express();
 
 // view engine setup
@@ -13,6 +13,7 @@ app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 app.use(express.json());
+app.use(cors());
 
 app.use('/', indexRouter);
 app.use('/expensereport', expenseReportRouter);

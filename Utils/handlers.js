@@ -5,7 +5,7 @@ class Handlers {
     */
     HandleResponse(doc, res) {
         if (doc) {
-          return res.status(201).send(doc);
+          return res.status(201).json(doc);
         }
     }
     /*

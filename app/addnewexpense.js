@@ -15,11 +15,11 @@ class AddNewExpense {
     */
     addNewReport() {
         try {
-            var date = this.request.date;
-            if (!date) {
-               date = new Date();
+            var month = this.request.month;
+            if (!month) {
+               var date = new Date();
+               month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
             }
-            var month = date.toLocaleString('en-us', { month: 'long' }) + date.getFullYear();
             var expensereport = new this.ExpenseReportModel({ month: month });
             var query = this.ExpenseReportModel.findOne({ month: month });
             query.then(function (existingReport) {
@@ -55,6 +55,7 @@ class AddNewExpense {
             }
             return new Promise(function(resolve, reject){ resolve('Report does not exist');});
         }).then(doc => { 
+            console.log("DOC =", doc);
             handlers.HandleResponse(doc, this.response) 
         }).catch(err => { 
             handlers.HandleError(err, this.response) 
